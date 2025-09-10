@@ -4,77 +4,112 @@ This project implements a secure Express.js backend for Innovate Inc.’s user p
 
 ## Features
 
-User Registration & Login
+## User Registration & Login
+        
+        Local authentication with email/password.
+        
+        Passwords hashed using bcrypt.
+        
+        JWT tokens for session management.
 
-Local authentication with email/password.
+## GitHub OAuth Authentication
+        
+        Login via GitHub using passport-github2.
+        
+        New users are automatically created if logging in via GitHub for the first time.
+        
+        JWT token is returned to the client after successful OAuth login.
 
-Passwords hashed using bcrypt.
+## Secure Bookmark Management
 
-JWT tokens for session management.
+      CRUD operations for personal bookmarks.
+      
+      Authentication required for all bookmark endpoints.
+      
+      Authorization ensures users can only access their own bookmarks.
 
-GitHub OAuth Authentication
+## Environment-based Configuration
 
-Login via GitHub using passport-github2.
+      Sensitive credentials stored in .env.
+      
+      Database connection and OAuth credentials configurable via environment variables.
 
-New users are automatically created if logging in via GitHub for the first time.
 
-JWT token is returned to the client after successful OAuth login.
+## Technology used
 
-Secure Bookmark Management
+        Backend: Node.js, Express.js
+        
+        Database: MongoDB / Mongoose
+        
+        Authentication: JWT, bcrypt, passport, passport-github2
+        
+        Environment Management: dotenv
+        
+        Testing: Postman or Insomnia
 
-CRUD operations for personal bookmarks.
-
-Authentication required for all bookmark endpoints.
-
-Authorization ensures users can only access their own bookmarks.
-
-Environment-based Configuration
-
-Sensitive credentials stored in .env.
-
-Database connection and OAuth credentials configurable via environment variables.
-
-Backend: Node.js, Express.js
-
-Database: MongoDB / Mongoose
-
-Authentication: JWT, bcrypt, passport, passport-github2
-
-Environment Management: dotenv
-
-Testing: Postman or Insomnia
+## work flow
 
 Authentication & Authorization Flow
+
 1. User Registration (Local Auth)
 
-Endpoint: POST /api/users/register
+          Endpoint: POST /api/users/register
+          
+          User sends username, email, password.
+          
+          Backend checks if the user exists → if not, hashes the password with bcrypt.
+          
+          Stores new user in MongoDB 
+          
+          Returns user info (without password).
+          
+          Called when a new user signs up directly on your portal.
 
-What happens:
+2.User Login (Local Auth)
 
-User sends username, email, password.
+        Endpoint: POST /api/users/login
+        
+        User sends email and password.
+        
+        Backend verifies email exists.
+        
+        Uses user.isCorrectPassword(password) to validate.
+        
+        If valid → generates JWT using jsonwebtoken.sign.
+        
+        Sends { token, user } back to client.
+        
+        Usage: Client stores this token in localStorage/cookie and attaches it to future API requests.
 
-Backend checks if the user exists → if not, hashes the password with bcrypt.
+  ## Github OAuth
 
-Stores new user in MongoDB (via User.js model).
 
-Returns user info (without password).
+      GitHub redirects back with a code.
+      
+      Passport exchanges code for an access token.
+      
+      passport-github2 fetches the user profile from GitHub.
+      
+      App checks if user exists:
 
-Usage: Called when a new user signs up directly on your portal.
+## Secure routes by using middleware
 
-User Login (Local Auth)
+    Looks for Authorization: Bearer <token> header.
+    
+    Verifies JWT with jwt.verify and your JWT_SECRET.
+    
+    Attaches user info to req.user.
+    
+    Only authenticated users can reach bookmark routes
 
-Endpoint: POST /api/users/login
+##  Bookmark CRUD
 
-What happens:
-
-User sends email and password.
-
-Backend verifies email exists.
-
-Uses user.isCorrectPassword(password) to validate.
-
-If valid → generates JWT using jsonwebtoken.sign.
-
-Sends { token, user } back to client.
-
-Usage: Client stores this token in localStorage/cookie and attaches it to future API requests.
+      POST /api/bookmarks → create new bookmark.
+      
+      GET /api/bookmarks → get all bookmarks of logged-in user.
+      
+      GET /api/bookmarks/:id → fetch one (only if owner).
+      
+      PUT /api/bookmarks/:id → update (only if owner).
+      
+      DELETE /api/bookmarks/:id → delete (only if owner).
